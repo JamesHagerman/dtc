@@ -377,6 +377,56 @@ int fdt_add_subnode(void *fdt, int parentoffset, const char *name)
 	return fdt_add_subnode_namelen(fdt, parentoffset, name, strlen(name));
 }
 
+int fdt_add_subnode_r(void *fdt, char *path)
+{
+	char *end = path;
+	char *name = NULL;
+	int eos = 0;
+	int parent_offset = fdt_path_offset(fdt, "/");
+
+	for (;;) {
+		while (*end != '/' && *end != '\0')
+			end++;
+
+		/* exit the loop once we reach the end of the string */
+		if (*end == '\0')
+			eos = 1;
+
+		*end = '\0';
+
+		if (strlen(path) > 0) {
+			int offset = fdt_path_offset(fdt, path);
+
+			/* if the path is not present, add a new subnote */
+			if (offset == -FDT_ERR_NOTFOUND)
+				offset = fdt_add_subnode(fdt, parent_offset, name);
+
+			if (offset < 0)
+				/* error out */
+				return offset;
+
+			parent_offset = offset;
+		}
+
+		if (eos)
+			break;
+
+		/* restore the original character */
+		*end = '/';
+
+		/* advance end so the logic above can continue */
+		end++;
+
+		/*
+		 * keep a pointer to the node name part of the string so
+		 * it can be used later if a new subnode has to be created
+		 */
+		name = end;
+	}
+
+	return parent_offset;
+}
+
 int fdt_del_node(void *fdt, int nodeoffset)
 {
 	int endoffset;

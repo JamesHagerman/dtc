@@ -1447,6 +1447,31 @@ int fdt_add_subnode_namelen(void *fdt, int parentoffset,
 int fdt_add_subnode(void *fdt, int parentoffset, const char *name);
 
 /**
+ * fdt_add_subnode_r: add a subnode recursively
+ * @fdt: A pointer to the DT
+ * @path: the path to add, using '/' as delimiters
+ *
+ * fdt_add_subnode_r() will tokenize @path and create all subnodes that
+ * do not exist in @fdt recursively. This requires the tree to have
+ * sufficient space to hold the new nodes.
+ *
+ * This function may insert data into the blob, and will therefore
+ * change the offsets of some existing nodes.
+ *
+ * returns:
+ *	0, on success
+*	-FDT_ERR_NOSPACE, if there is insufficient free space in the
+ *		blob to contain the new node
+ *	-FDT_ERR_BADLAYOUT
+ *      -FDT_ERR_BADMAGIC,
+ *	-FDT_ERR_BADVERSION,
+ *	-FDT_ERR_BADSTATE,
+ *	-FDT_ERR_BADSTRUCTURE,
+ *	-FDT_ERR_TRUNCATED, standard meanings.
+ */
+int fdt_add_subnode_r(void *fdt, char *path);
+
+/**
  * fdt_del_node - delete a node (subtree)
  * @fdt: pointer to the device tree blob
  * @nodeoffset: offset of the node to nop
