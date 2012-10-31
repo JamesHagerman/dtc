@@ -540,3 +540,82 @@ int fdt_pack(void *fdt)
 
 	return 0;
 }
+
+int fdt_overlay(void *fdt, const void *other)
+{
+	int done = 0;
+	uint32_t tag;
+	int nodeoffset = 0, nextoffset;
+	char pathbuf[256] = { 0 };
+
+	FDT_RW_CHECK_HEADER(fdt);
+	FDT_CHECK_HEADER(other);
+
+	do {
+		char *r, *last_r;
+		const char *namep;
+		int target_offset, ret, len;
+		const struct fdt_property *prop;
+
+		/* walk all nodes of the 'other' tree */
+		tag = fdt_next_tag(other, nodeoffset, &nextoffset);
+
+		switch (tag) {
+		case FDT_PROP:
+			prop = fdt_offset_ptr(other, nodeoffset, sizeof(*prop));
+			namep = fdt_string(other, fdt32_to_cpu(prop->nameoff));
+
+			/* does the containing node already exist in the target? */
+			target_offset = fdt_path_offset(fdt, pathbuf);
+
+			/* create the node in the target */
+			if (target_offset == -FDT_ERR_NOTFOUND)
+				target_offset = fdt_add_subnode_r(fdt, pathbuf);
+
+			/*
+			 * error out if either fdt_path_offset() or
+			 * fdt_add_subnode_r() failed
+			 */
+			if (target_offset < 0)
+				return target_offset;
+
+			/* finally set the value */
+			ret = fdt_setprop(fdt, target_offset, namep,
+					  prop->data, fdt32_to_cpu(prop->len));
+			if (ret < 0)
+				return ret;
+
+			break;
+		case FDT_BEGIN_NODE:
+			/* append the node name to pathbuf, plus a leading '/' */
+			len = strlen(pathbuf);
+			namep = fdt_get_name(other, nodeoffset, NULL);
+
+			if (strlen(namep) + len + 1 >= sizeof(pathbuf))
+				return -FDT_ERR_INTERNAL;
+
+			pathbuf[len] = '/';
+			strcpy(pathbuf + len + 1, namep);
+			break;
+		case FDT_END_NODE:
+			/* zero out the last '/' character in pathbuf */
+			for (r = pathbuf, last_r = NULL; *r; r++)
+				if (*r == '/') {
+					last_r = r;
+					while (*++r == '/');
+				}
+			if (last_r)
+				*last_r = '\0';
+			break;
+		case FDT_END:
+			done = 1;
+			break;
+		}
+
+		nodeoffset = nextoffset;
+	} while(!done);
+
+	fdt_pack(fdt);
+
+	return 0;
+}

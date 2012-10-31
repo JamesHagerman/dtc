@@ -1494,6 +1494,36 @@ int fdt_add_subnode_r(void *fdt, char *path);
  */
 int fdt_del_node(void *fdt, int nodeoffset);
 
+/**
+ * fdt_overlay - merges two trees recursively by overlaying the contents
+ * @fdt: pointer to the destination device tree blob (destination)
+ * @other: pointer to the 'other' device tree blob to overlay
+ *
+ * fdt_overlay() will overlay the contents if the tree pointed to by
+ * the 'other' argument and set all properties in the tree pointed to
+ * by the 'fdt'.
+ *
+ * 'fdt' will hold the overlay of both trees and will hence need to
+ * have sufficient space to hold all the new content on top of those
+ * it already contains. In case of insufficient space, -FDT_ERR_NOSPACE
+ * is returned.
+ *
+ * This function will augment data in the the 'fdt' blob, and will
+ * therefore change the offsets of some existing nodes.
+ *
+ * returns:
+ *	0, on success
+*	-FDT_ERR_NOSPACE, if there is insufficient free space in the
+ *		blob to contain the new node
+ *	-FDT_ERR_BADLAYOUT
+ *      -FDT_ERR_BADMAGIC,
+ *	-FDT_ERR_BADVERSION,
+ *	-FDT_ERR_BADSTATE,
+ *	-FDT_ERR_BADSTRUCTURE,
+ *	-FDT_ERR_TRUNCATED, standard meanings.
+ */
+int fdt_overlay(void *fdt, const void *other);
+
 /**********************************************************************/
 /* Debugging / informational functions                                */
 /**********************************************************************/
