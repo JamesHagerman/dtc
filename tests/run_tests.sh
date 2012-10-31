@@ -577,6 +577,13 @@ fdtput_tests () {
     # TODO: Add tests for verbose mode?
 }
 
+overlay_tests () {
+    # Overlay
+    run_dtc_test -I dts -O dtb -o overlay-a.dtb overlay-a.dts
+    run_dtc_test -I dts -O dtb -o overlay-b.dtb overlay-b.dts
+    run_test overlay overlay-a.dtb overlay-b.dtb
+}
+
 utilfdt_tests () {
     run_test utilfdt_test
 }
@@ -596,7 +603,7 @@ while getopts "vt:m" ARG ; do
 done
 
 if [ -z "$TESTSETS" ]; then
-    TESTSETS="libfdt utilfdt dtc dtbs_equal fdtget fdtput"
+    TESTSETS="libfdt utilfdt dtc dtbs_equal fdtget fdtput overlay"
 fi
 
 # Make sure we don't have stale blobs lying around
@@ -621,6 +628,9 @@ for set in $TESTSETS; do
 	    ;;
 	"fdtput")
 	    fdtput_tests
+	    ;;
+	"overlay")
+	    overlay_tests
 	    ;;
     esac
 done

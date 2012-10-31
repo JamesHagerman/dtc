@@ -1,0 +1,12 @@
+/dts-v1/;
+
+/ {
+	b {
+		prop = "val";
+	};
+
+	common {
+		prop-b = <2>;
+		both = <2>;
+	};
+};
